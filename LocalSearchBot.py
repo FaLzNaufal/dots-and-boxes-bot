@@ -25,12 +25,10 @@ class LocalSearchBot(Bot):
             x += 1
             y = 0
             valid = matrix[y, x] == 0
-
         return (x, y)
 
     # the objective value is the sum of all the squares completed by the agent
     def get_objective_value(self, state: GameState) -> int:
-        # print(state.board_status)
         total = 0
         for i in state.board_status:
             for j in i:
@@ -61,7 +59,6 @@ class LocalSearchBot(Bot):
                             state)*abs(new_game_state.board_status[i, j]) + self.getPlayerValue(state)
                     row_and_value["row", (j, i)] = self.get_objective_value(
                         new_game_state)
-                    print("row", i, j, '\n', new_game_state.board_status)
         return row_and_value
 
     # all possible col coordinate that can be filled
@@ -83,7 +80,6 @@ class LocalSearchBot(Bot):
                             state)*abs(new_game_state.board_status[i, j]) + self.getPlayerValue(state)
                     col_and_value["col", (j, i)] = self.get_objective_value(
                         new_game_state)
-                    print("col", i, j, '\n', state.board_status)
         return col_and_value
 
     # get the best successor which has the highest objective value
@@ -93,14 +89,12 @@ class LocalSearchBot(Bot):
         if (not state.player1_turn):
             max_value = max(successors.values())
             max_keys = [k for k, v in successors.items() if v == max_value]
-            print(successors)
             # if there are multiple max value, randomly choose one
             return random.choice(max_keys)
         # if bot is player 1, then it is minimizing
         else:
             min_value = min(successors.values())
             min_keys = [k for k, v in successors.items() if v == min_value]
-            print(successors)
             # if there are multiple min value, randomly choose one
             return random.choice(min_keys)
 
