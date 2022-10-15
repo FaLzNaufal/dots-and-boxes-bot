@@ -16,11 +16,9 @@ class LocalSearchBot(Bot):
 
     def get_next_position_with_zero_value(self, matrix: np.ndarray):
         [ny, nx] = matrix.shape
-
         x = -1
         y = -1
         valid = False
-
         while not valid:
             x += 1
             y = 0
