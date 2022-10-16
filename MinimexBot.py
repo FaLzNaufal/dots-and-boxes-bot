@@ -5,7 +5,13 @@ from GameState import GameState
 import random
 import numpy as np
 
-class MinimexBot(Bot):
+class MinimaxBot(Bot):
+
+    def getPlayerValue(self, state: GameState):
+        if state.player1_turn:
+            return -1
+        else:
+            return 1
 
     # the objective value is the sum of all the squares completed by the agent
     def get_objective_value(self, state: GameState) -> int:
@@ -72,7 +78,7 @@ class MinimexBot(Bot):
         fBoard = np.ravel(fState.board_status)
         i = 0
         consTurn = False
-        while i<16 and not consTurn:
+        while i < 9 and not consTurn:
             if iBoard[i] < fBoard[i] and fBoard[i] == abs(4):
                 consTurn = True
             i += 1
@@ -84,40 +90,70 @@ class MinimexBot(Bot):
             return self.get_objective_value(state)
 
         if player1:
+            path = {}
             maxValue = -100
             successor = self.generate_successor(state)
             for key in successor:
-                if self.checkConsecutiveTurn(state, successor.get(key)):
+                if self.checkConsecutiveTurn(state, successor.get(key)[0]):
                     player1Turn = True
                 else:
                     player1Turn = False
                 value = self.minimax(successor.get(key)[0], depth-1, alpha, beta, player1Turn)
+                '''
+                if depth == 4:
+                    if maxValue != max(maxValue, value):
+                        path.clear()
+                        action = list(successor.keys())
+                        path[action[0][0], action[0][1]] = value
+                '''
                 maxValue = max(maxValue, value)
-                successor[key] = (successor.get(key)[0], maxValue)
                 alpha = max(alpha, value)
+                if depth == 4:
+                    path.clear()
+                    action = list(successor.keys())
+                    path[action[0][0], action[0][1]] = value
                 if beta <= alpha:
                     break
-            return maxValue
+            if depth == 4:
+                return path
+            else:
+                return maxValue
 
         else:
+            path = {}
             minValue = 100
             successor = self.generate_successor(state)
             for key in successor:
-                if self.checkConsecutiveTurn(state, successor.get(key)):
+                if self.checkConsecutiveTurn(state, successor.get(key)[0]):
                     player1Turn = False
                 else:
                     player1Turn = True
-                value = self.minimax(successor.get(key), depth-1, alpha, beta, player1Turn)
+                value = self.minimax(successor.get(key)[0], depth-1, alpha, beta, player1Turn)
+                '''
+                if depth == 4:
+                    if minValue != min(minValue, value):
+                        path.clear()
+                        action = list(successor.keys())
+                        path[action[0][0],action[0][1]] = value
+                '''
                 minValue = min(minValue, value)
                 beta = min(beta, value)
+                if depth == 4:
+                    path.clear()
+                    action = list(successor.keys())
+                    path[action[0][0], action[0][1]] = value
                 if beta <= alpha:
                     break
-            return minValue
+            if depth == 4:
+                return path
+            else:
+                return minValue
 
     def get_neighbor(self, state: GameState):
-        successors = self.minimax(state, 4, -100, 100, state.player1_turn)
-        return list(successors.keys())[0]
+        successor = self.minimax(state, 4, -100, 100, state.player1_turn)
+        action = list(successor.keys())
+        return action[0]
 
     def get_action(self, state: GameState) -> GameAction:
-        lit, pos = self.get_neighbour(state)
+        lit, pos = self.get_neighbor(state)
         return GameAction(lit, pos)
