@@ -93,9 +93,7 @@ class MinimaxBot(Bot):
             path = {}
             maxValue = -100
             successor = self.generate_successor(state)
-            i=0
             for key in successor:
-                i += 1
                 if self.checkConsecutiveTurn(state, successor.get(key)[0]):
                     player1Turn = False
                 else:
@@ -108,7 +106,10 @@ class MinimaxBot(Bot):
                 if beta <= alpha:
                     break
             if depth == 4:
-                return path
+                optimal = max(path.values())
+                optimalAct = [k for k, v in path.items() if v == optimal]
+                act = random.choice(optimalAct)
+                return act
             else:
                 return maxValue
 
@@ -116,9 +117,7 @@ class MinimaxBot(Bot):
             path = {}
             minValue = 100
             successor = self.generate_successor(state)
-            i=0
             for key in successor:
-                i+=1
                 if self.checkConsecutiveTurn(state, successor.get(key)[0]):
                     player1Turn = True
                 else:
@@ -131,24 +130,15 @@ class MinimaxBot(Bot):
                 if beta <= alpha:
                     break
             if depth == 4:
-                return path
+                optimal = min(path.values())
+                optimalAct = [k for k, v in path.items() if v == optimal]
+                act = random.choice(optimalAct)
+                return act
             else:
                 return minValue
 
     def get_neighbor(self, state: GameState):
-        successor = self.minimax(state, 4, -100, 100, state.player1_turn)
-        if (not state.player1_turn):
-            max_value = max(successor.values())
-            max_keys = [k for k, v in successor.items() if v == max_value]
-            return random.choice(max_keys)
-
-        # if bot is player 1, then it is minimizing
-        else:
-            min_value = min(successor.values())
-            min_keys = [k for k, v in successor.items() if v == min_value]
-            return random.choice(min_keys)
-        action = list(successor.keys())
-        return action[0]
+        return self.minimax(state, 4, -100, 100, state.player1_turn)
 
     def get_action(self, state: GameState) -> GameAction:
         lit, pos = self.get_neighbor(state)
