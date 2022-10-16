@@ -80,6 +80,65 @@ class LocalSearchBot(Bot):
                         new_game_state)
         return col_and_value
 
+    # heuristic not to choose action that will give enemy chance to close the square
+    def evaluate_keys(self, list_keys: list, state: GameState, maximize = True):
+        # list of heuristic applied choices
+        available_choices = []
+        for choice in list_keys:
+            state_copy : GameState
+            state_copy = deepcopy(state)
+
+            movement_type = choice[0]
+            x, y = choice[1]
+            i = y ; j = x
+
+            if movement_type == 'row':
+                ny = state.row_status.shape[0]
+                # not top edge
+                if i > 0:
+                    state_copy.board_status[i - 1, j] = self.getPlayerValue(
+                        state)*abs(state_copy.board_status[i - 1, j]) + self.getPlayerValue(state)
+                # not bottom edge
+                if i < ny - 1:
+                    state_copy.board_status[i, j] = self.getPlayerValue(
+                        state)*abs(state_copy.board_status[i, j]) + self.getPlayerValue(state)
+                    
+            elif movement_type == 'col':
+                nx = state.col_status.shape[1]
+                # not left edge
+                if j > 0:
+                    state_copy.board_status[i, j - 1] = self.getPlayerValue(
+                        state)*abs(state_copy.board_status[i, j - 1]) + self.getPlayerValue(state)
+                # not right edge
+                if j < nx - 1:
+                    state_copy.board_status[i, j] = self.getPlayerValue(
+                        state)*abs(state_copy.board_status[i, j]) + self.getPlayerValue(state)
+
+            else:
+                raise Exception("Unknown movement type")
+            
+            # Do not choose if it makes the board status element is 3 (maximize) or -3 (minimize) 
+            # because it will give enemy chance to close the square
+            chosen = True
+            sy, sx = state_copy.board_status.shape
+            for i in range(sy):
+                for j in range(sx):
+                    if maximize and state_copy.board_status[i,j] == 3:
+                        chosen = False
+                    elif not maximize and state_copy.board_status[i,j] == -3:
+                        chosen = False
+
+            # add to available_choices if chosen
+            if chosen:
+                available_choices.append(choice)
+
+        if len(available_choices) != 0:
+            # randomize when available choices are more than one
+            return random.choice(available_choices)
+        else:
+            # choose initial list_keys random if available_choices are not available
+            return random.choice(list_keys)
+
     # get the best successor which has the highest objective value
     def get_neighbour(self, state: GameState):
         successors = self.generate_successor(state)
@@ -87,14 +146,21 @@ class LocalSearchBot(Bot):
         if (not state.player1_turn):
             max_value = max(successors.values())
             max_keys = [k for k, v in successors.items() if v == max_value]
-            # if there are multiple max value, randomly choose one
-            return random.choice(max_keys)
+            
+            # evaluate max_keys with heuristic
+            neighbor = self.evaluate_keys(max_keys, state, maximize=True)
+
+            return neighbor
+
         # if bot is player 1, then it is minimizing
         else:
             min_value = min(successors.values())
             min_keys = [k for k, v in successors.items() if v == min_value]
-            # if there are multiple min value, randomly choose one
-            return random.choice(min_keys)
+
+            # evaluate min_keys with heuristic
+            neighbor = self.evaluate_keys(min_keys, state, maximize=False)
+
+            return neighbor
 
     def get_action(self, state: GameState) -> GameAction:
         lit, pos = self.get_neighbour(state)
