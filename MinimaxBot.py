@@ -84,6 +84,59 @@ class MinimaxBot(Bot):
             i += 1
         return consTurn
 
+    def evaluate_keys(self, list_keys: list, state: GameState, maximize = True):
+        # list of heuristic applied choices
+        available_choices = []
+        for choice in list_keys:
+            state_copy : GameState
+            state_copy = deepcopy(state)
+
+            movement_type = choice[0]
+            x, y = choice[1]
+            i = y ; j = x
+
+            if movement_type == 'row':
+                ny = state.row_status.shape[0]
+                # not top edge
+                if i > 0:
+                    state_copy.board_status[i - 1, j] = self.getPlayerValue(
+                        state)*abs(state_copy.board_status[i - 1, j]) + self.getPlayerValue(state)
+                # not bottom edge
+                if i < ny - 1:
+                    state_copy.board_status[i, j] = self.getPlayerValue(
+                        state)*abs(state_copy.board_status[i, j]) + self.getPlayerValue(state)
+                    
+            else:
+                nx = state.col_status.shape[1]
+                # not left edge
+                if j > 0:
+                    state_copy.board_status[i, j - 1] = self.getPlayerValue(
+                        state)*abs(state_copy.board_status[i, j - 1]) + self.getPlayerValue(state)
+                # not right edge
+                if j < nx - 1:
+                    state_copy.board_status[i, j] = self.getPlayerValue(
+                        state)*abs(state_copy.board_status[i, j]) + self.getPlayerValue(state)
+
+            chosen = True
+            sy, sx = state_copy.board_status.shape
+            for i in range(sy):
+                for j in range(sx):
+                    if maximize and state_copy.board_status[i,j] == 3:
+                        chosen = False
+                    elif not maximize and state_copy.board_status[i,j] == -3:
+                        chosen = False
+
+            # add to available_choices if chosen
+            if chosen:
+                available_choices.append(choice)
+
+        if len(available_choices) != 0:
+            # randomize when available choices are more than one
+            return random.choice(available_choices)
+        else:
+            # choose initial list_keys random if available_choices are not available
+            return random.choice(list_keys)
+
     #minimax algorithm
     def minimax (self, state: GameState, depth, alpha, beta, player1):
         if depth == 0 or self.finalPos(state):
@@ -101,15 +154,12 @@ class MinimaxBot(Bot):
                 value = self.minimax(successor.get(key)[0], depth-1, alpha, beta, player1Turn)
                 maxValue = max(maxValue, value)
                 alpha = max(alpha, value)
-                if depth == 4:
+                if depth == 5:
                     path[key[0],key[1]] = value
                 if beta <= alpha:
                     break
-            if depth == 4:
-                optimal = max(path.values())
-                optimalAct = [k for k, v in path.items() if v == optimal]
-                act = random.choice(optimalAct)
-                return act
+            if depth == 5:
+                return path
             else:
                 return maxValue
 
@@ -125,11 +175,11 @@ class MinimaxBot(Bot):
                 value = self.minimax(successor.get(key)[0], depth-1, alpha, beta, player1Turn)
                 minValue = min(minValue, value)
                 beta = min(beta, value)
-                if depth == 4:
+                if depth == 5:
                     path[key[0],key[1]] = value
                 if beta <= alpha:
                     break
-            if depth == 4:
+            if depth == 5:
                 optimal = min(path.values())
                 optimalAct = [k for k, v in path.items() if v == optimal]
                 act = random.choice(optimalAct)
@@ -138,7 +188,16 @@ class MinimaxBot(Bot):
                 return minValue
 
     def get_neighbor(self, state: GameState):
-        return self.minimax(state, 4, -100, 100, state.player1_turn)
+        successors = self.minimax(state, 5, -100, 100, state.player1_turn)
+        if state.player1_turn:
+            value = min(successors.values())
+            min_keys = [k for k, v in successors.items() if v == value]
+            act = self.evaluate_keys(min_keys, state, maximize=False)
+        else:
+            value = max(successors.values())
+            max_keys = [k for k, v in successors.items() if v == value]
+            act = self.evaluate_keys(max_keys, state, maximize=True)
+        return act
 
     def get_action(self, state: GameState) -> GameAction:
         lit, pos = self.get_neighbor(state)

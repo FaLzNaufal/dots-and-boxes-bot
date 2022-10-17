@@ -335,6 +335,7 @@ if __name__ == "__main__":
     """
     #game_instance = Dots_and_Boxes(None, LocalSearchBot())
     #game_instance = Dots_and_Boxes(MinimaxBot(), LocalSearchBot())
+    game_instance = Dots_and_Boxes(LocalSearchBot(), MinimaxBot())
     #game_instance = Dots_and_Boxes(MinimaxBot(), MinimaxBot())
-    game_instance = Dots_and_Boxes(LocalSearchBot(), LocalSearchBot())
+    #game_instance = Dots_and_Boxes(LocalSearchBot(), LocalSearchBot())
     game_instance.mainloop()
