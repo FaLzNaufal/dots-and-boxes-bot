@@ -7,8 +7,8 @@ import numpy as np
 
 class MinimaxBot(Bot):
 
-    def getPlayerValue(self, state: GameState):
-        if state.player1_turn:
+    def getPlayerValue(self, player1):
+        if player1:
             return -1
         else:
             return 1
@@ -29,11 +29,11 @@ class MinimaxBot(Bot):
         return column & row
 
     # generate successor for a certain state
-    def generate_successor(self, state: GameState):
-        return {**self.generate_successor_row(state), **self.generate_successor_col(state)}
+    def generate_successor(self, state: GameState, player1):
+        return {**self.generate_successor_row(state, player1), **self.generate_successor_col(state, player1)}
 
     # all possible row coordinate that can be filled
-    def generate_successor_row(self, state: GameState):
+    def generate_successor_row(self, state: GameState, player1):
         [ny, nx] = state.row_status.shape
         row_and_value = {}
         for i in range(ny):
@@ -44,16 +44,16 @@ class MinimaxBot(Bot):
                     # not top edge
                     if i > 0:
                         new_game_state.board_status[i - 1, j] = self.getPlayerValue(
-                            state)*abs(new_game_state.board_status[i - 1, j]) + self.getPlayerValue(state)
+                            player1)*abs(new_game_state.board_status[i - 1, j]) + self.getPlayerValue(player1)
                     # not bottom edge
                     if i < ny - 1:
                         new_game_state.board_status[i, j] = self.getPlayerValue(
-                            state)*abs(new_game_state.board_status[i, j]) + self.getPlayerValue(state)
+                            player1)*abs(new_game_state.board_status[i, j]) + self.getPlayerValue(player1)
                     row_and_value["row", (j, i)] = (new_game_state, 0)
         return row_and_value
 
     # all possible col coordinate that can be filled
-    def generate_successor_col(self, state: GameState):
+    def generate_successor_col(self, state: GameState, player1):
         [ny, nx] = state.col_status.shape
         col_and_value = {}
         for i in range(ny):
@@ -64,11 +64,11 @@ class MinimaxBot(Bot):
                     # not left edge
                     if j > 0:
                         new_game_state.board_status[i, j - 1] = self.getPlayerValue(
-                            state)*abs(new_game_state.board_status[i, j - 1]) + self.getPlayerValue(state)
+                            player1)*abs(new_game_state.board_status[i, j - 1]) + self.getPlayerValue(player1)
                     # not right edge
                     if j < nx - 1:
                         new_game_state.board_status[i, j] = self.getPlayerValue(
-                            state)*abs(new_game_state.board_status[i, j]) + self.getPlayerValue(state)
+                            player1)*abs(new_game_state.board_status[i, j]) + self.getPlayerValue(player1)
                     col_and_value["col", (j, i)] = (new_game_state, 0)
         return col_and_value
 
@@ -145,7 +145,7 @@ class MinimaxBot(Bot):
         if not player1:
             path = {}
             maxValue = -100
-            successor = self.generate_successor(state)
+            successor = self.generate_successor(state,player1)
             for key in successor:
                 if self.checkConsecutiveTurn(state, successor.get(key)[0]):
                     player1Turn = False
@@ -154,7 +154,7 @@ class MinimaxBot(Bot):
                 value = self.minimax(successor.get(key)[0], depth-1, alpha, beta, player1Turn)
                 maxValue = max(maxValue, value)
                 alpha = max(alpha, value)
-                if depth == 5:
+                if depth == 5:  
                     path[key[0],key[1]] = value
                 if beta <= alpha:
                     break
@@ -166,10 +166,11 @@ class MinimaxBot(Bot):
         else:
             path = {}
             minValue = 100
-            successor = self.generate_successor(state)
+            successor = self.generate_successor(state, player1)
             for key in successor:
                 if self.checkConsecutiveTurn(state, successor.get(key)[0]):
                     player1Turn = True
+
                 else:
                     player1Turn = False
                 value = self.minimax(successor.get(key)[0], depth-1, alpha, beta, player1Turn)
