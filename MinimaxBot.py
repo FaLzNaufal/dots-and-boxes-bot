@@ -100,22 +100,22 @@ class MinimaxBot(Bot):
                 # not top edge
                 if i > 0:
                     state_copy.board_status[i - 1, j] = self.getPlayerValue(
-                        state)*abs(state_copy.board_status[i - 1, j]) + self.getPlayerValue(state)
+                        state.player1_turn)*abs(state_copy.board_status[i - 1, j]) + self.getPlayerValue(state.player1_turn)
                 # not bottom edge
                 if i < ny - 1:
                     state_copy.board_status[i, j] = self.getPlayerValue(
-                        state)*abs(state_copy.board_status[i, j]) + self.getPlayerValue(state)
+                        state.player1_turn)*abs(state_copy.board_status[i, j]) + self.getPlayerValue(state.player1_turn)
                     
             else:
                 nx = state.col_status.shape[1]
                 # not left edge
                 if j > 0:
                     state_copy.board_status[i, j - 1] = self.getPlayerValue(
-                        state)*abs(state_copy.board_status[i, j - 1]) + self.getPlayerValue(state)
+                        state.player1_turn)*abs(state_copy.board_status[i, j - 1]) + self.getPlayerValue(state.player1_turn)
                 # not right edge
                 if j < nx - 1:
                     state_copy.board_status[i, j] = self.getPlayerValue(
-                        state)*abs(state_copy.board_status[i, j]) + self.getPlayerValue(state)
+                        state.player1_turn)*abs(state_copy.board_status[i, j]) + self.getPlayerValue(state.player1_turn)
 
             chosen = True
             sy, sx = state_copy.board_status.shape
@@ -154,11 +154,11 @@ class MinimaxBot(Bot):
                 value = self.minimax(successor.get(key)[0], depth-1, alpha, beta, player1Turn)
                 maxValue = max(maxValue, value)
                 alpha = max(alpha, value)
-                if depth == 5:  
+                if depth == 1:  
                     path[key[0],key[1]] = value
                 if beta <= alpha:
                     break
-            if depth == 5:
+            if depth == 1:
                 return path
             else:
                 return maxValue
@@ -170,26 +170,22 @@ class MinimaxBot(Bot):
             for key in successor:
                 if self.checkConsecutiveTurn(state, successor.get(key)[0]):
                     player1Turn = True
-
                 else:
                     player1Turn = False
                 value = self.minimax(successor.get(key)[0], depth-1, alpha, beta, player1Turn)
                 minValue = min(minValue, value)
                 beta = min(beta, value)
-                if depth == 5:
+                if depth == 1:
                     path[key[0],key[1]] = value
                 if beta <= alpha:
                     break
-            if depth == 5:
-                optimal = min(path.values())
-                optimalAct = [k for k, v in path.items() if v == optimal]
-                act = random.choice(optimalAct)
-                return act
+            if depth == 1:
+                return path
             else:
                 return minValue
 
     def get_neighbor(self, state: GameState):
-        successors = self.minimax(state, 5, -100, 100, state.player1_turn)
+        successors = self.minimax(state, 1, -100, 100, state.player1_turn)
         if state.player1_turn:
             value = min(successors.values())
             min_keys = [k for k, v in successors.items() if v == value]
