@@ -154,11 +154,11 @@ class MinimaxBot(Bot):
                 value = self.minimax(successor.get(key)[0], depth-1, alpha, beta, player1Turn)
                 maxValue = max(maxValue, value)
                 alpha = max(alpha, value)
-                if depth == 1:  
+                if depth == 4:  
                     path[key[0],key[1]] = value
                 if beta <= alpha:
                     break
-            if depth == 1:
+            if depth == 4:
                 return path
             else:
                 return maxValue
@@ -175,17 +175,17 @@ class MinimaxBot(Bot):
                 value = self.minimax(successor.get(key)[0], depth-1, alpha, beta, player1Turn)
                 minValue = min(minValue, value)
                 beta = min(beta, value)
-                if depth == 1:
+                if depth == 4:
                     path[key[0],key[1]] = value
                 if beta <= alpha:
                     break
-            if depth == 1:
+            if depth == 4:
                 return path
             else:
                 return minValue
 
     def get_neighbor(self, state: GameState):
-        successors = self.minimax(state, 1, -100, 100, state.player1_turn)
+        successors = self.minimax(state, 4, -100, 100, state.player1_turn)
         if state.player1_turn:
             value = min(successors.values())
             min_keys = [k for k, v in successors.items() if v == value]
