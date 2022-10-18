@@ -26,7 +26,7 @@ class MinimaxBot(Bot):
     def finalPos(self, state: GameState):
         column = np.all(np.ravel(state.col_status) == 1)
         row = np.all(np.ravel(state.row_status) == 1)
-        return column & row
+        return column and row
 
     # generate successor for a certain state
     def generate_successor(self, state: GameState, player1):
@@ -77,12 +77,11 @@ class MinimaxBot(Bot):
         iBoard = np.ravel(iState.board_status)
         fBoard = np.ravel(fState.board_status)
         i = 0
-        consTurn = False
-        while i < 9 and not consTurn:
-            if iBoard[i] < fBoard[i] and fBoard[i] == abs(4):
-                consTurn = True
+        while i < 9:
+            if abs(iBoard[i]) < abs(fBoard[i]) and abs(fBoard[i]) == 4:
+                return True
             i += 1
-        return consTurn
+        return False
 
     def evaluate_keys(self, list_keys: list, state: GameState, maximize = True):
         # list of heuristic applied choices
